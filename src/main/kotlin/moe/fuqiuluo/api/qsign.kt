@@ -15,6 +15,8 @@ import kotlinx.serialization.Serializable
 import moe.fuqiuluo.comm.EnvData
 import moe.fuqiuluo.ext.*
 import moe.fuqiuluo.unidbg.session.SessionManager
+import java.util.Locale
+import java.util.Locale.getDefault
 
 fun Routing.sign() {
     get("/sign") {
@@ -104,9 +106,9 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.requestSign(
     call.respond(
         APIResult(
             0, "success", Sign(
-                sign.token.toHexString(),
-                sign.extra.toHexString(),
-                sign.sign.toHexString(), o3did, list
+                sign.token.toHexString().uppercase(getDefault()),
+                sign.extra.toHexString().uppercase(getDefault()),
+                sign.sign.toHexString().uppercase(getDefault()), o3did.uppercase(getDefault()), list
             )
         )
     )

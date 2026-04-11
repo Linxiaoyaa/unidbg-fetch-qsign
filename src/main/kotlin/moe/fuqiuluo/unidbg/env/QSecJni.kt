@@ -3,8 +3,10 @@
 package moe.fuqiuluo.unidbg.env
 
 import CONFIG
+import com.github.unidbg.Symbol
 import com.github.unidbg.linux.android.dvm.*
 import com.github.unidbg.linux.android.dvm.array.ArrayObject
+import com.github.unidbg.utils.Inspector
 import com.tencent.mobileqq.channel.SsoPacket
 import com.tencent.mobileqq.dt.model.FEBound
 import com.tencent.mobileqq.qsec.qsecest.SelfBase64
@@ -16,6 +18,7 @@ import moe.fuqiuluo.ext.toHexString
 import moe.fuqiuluo.unidbg.QSecVM
 import moe.fuqiuluo.unidbg.vm.GlobalData
 import moe.fuqiuluo.utils.MD5
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.security.SecureRandom
@@ -32,6 +35,7 @@ class QSecJni(
     val vm: QSecVM,
     val global: GlobalData
 ) : AbstractJni() {
+
     override fun getStaticIntField(vm: BaseVM, dvmClass: DvmClass, signature: String): Int {
         if (signature == "android/os/Build\$VERSION->SDK_INT:I") {
             return 26
@@ -82,7 +86,13 @@ class QSecJni(
         if (signature == "com/tencent/secprotocol/ByteData->putUping(IIILjava/lang/Object;)V") {
             return
         }
-
+        if (signature == "com/tencent/mobileqq/channel/ChannelProxy->sendMessageInner(Ljava/lang/String;[BJ)V") {
+            val cmd = vaList.getObjectArg<StringObject>(0)?.value ?: ""
+            //val data = vaList.getObjectArg<ByteArray>(1)?.getValues() ?: byteArrayOf()
+            val seq = vaList.getLongArg(2)
+            println("ChannelProxy: Sending message. Cmd: $cmd, Seq: $seq")
+            return
+        }
         super.callVoidMethodV(vm, dvmObject, signature, vaList)
     }
 
@@ -174,6 +184,10 @@ class QSecJni(
                     "ASSIST-LIST-20231221","ASSIST-OPENED-20231221" -> "[]"
                     "ASSIST-ST-20231221" -> "1"
                     "SYSTEM_STARTTIME-20240104" -> (System.currentTimeMillis()-123456).toString()
+                    "o3_sign_duration_20251016" -> "10"
+                    "o3_sign_enable_20251016" -> "1"
+                    "o3_sign_sample_20251016"->"1"
+                    "v_c_d_t_t_202521291719" -> "1"
                     else -> error("Not support mmKVValue:$key")
                 }
             )
@@ -231,6 +245,11 @@ class QSecJni(
                     "ro.product.locale" -> "zh-CN"
                     "ro.build.flavor" -> "full_miui_64-user"
                     "ro.config.ringtone" -> "Ring_Synth_04.ogg"
+                    "ro.boot.verifiedbootstate" -> "true"
+                    "ro.build.version.sdk" ->"29"
+                    "ro.product.model" -> ("Pixel 4")
+                    "ro.recovery_id" -> ""
+                    "gsm.version.baseband" -> ("g9611-00001-200508-B-6477528")
                     else -> error("Not support prop:$key")
                 }
             )
@@ -359,10 +378,62 @@ class QSecJni(
         if ("com/tencent/secprotocol/t/s->d(Landroid/content/Context;)Ljava/lang/String;" == signature) {
             return StringObject(vm, "90721e0b3a587f77503b6abedd960c2e".uppercase())
         }
-
+        if ("com/tencent/mobileqq/dt/app/Dtc->mmQsecKVValue(Ljava/lang/String;)Ljava/lang/String;" == signature) {
+            return StringObject(vm, "1".uppercase())
+        }
+        if ("com/tencent/mobileqq/dt/app/Dtc->getLoginUins(Ljava/lang/String;)Ljava/lang/String;" == signature) {
+            return StringObject(vm, "0".uppercase())
+        }
+        if ("com/tencent/mobileqq/dt/app/Dtc->getBatteryCap(Ljava/lang/String;)Ljava/lang/String;" == signature) {
+            return StringObject(vm, "7800".uppercase())
+        }
+        if ("com/tencent/mobileqq/dt/app/Dtc->getDisplayInfo(Ljava/lang/String;)Ljava/lang/String;" == signature) {
+            val key = vaList.getObjectArg<StringObject>(0)?.value ?: ""
+            return when (key) {
+                "width" -> StringObject(vm, "1080")      // 屏幕宽度（像素）
+                "height" -> StringObject(vm, "2160")     // 屏幕高度（像素）
+                "density" -> StringObject(vm, "3.0")     // 屏幕密度
+                "densityDpi" -> StringObject(vm, "480")  // 每英寸点数
+                "scaledDensity" -> StringObject(vm, "3.0")
+                "xdpi" -> StringObject(vm, "403.0")
+                "ydpi" -> StringObject(vm, "403.0")
+                else -> StringObject(vm, "")
+            }
+        }
+        if ("com/tencent/mobileqq/dt/app/Dtc->getApkPath(Ljava/lang/String;)Ljava/lang/String;" == signature) {
+            val packageName = vaList.getObjectArg<StringObject>(0)?.value ?: ""
+            return if (packageName == envData.packageName || packageName == "com.tencent.mobileqq") {
+                StringObject(vm, "/data/app/${packageName}/base.apk")
+            } else {
+                StringObject(vm, "")
+            }
+        }
         return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList)
     }
+    override fun callStaticBooleanMethodV(vm: BaseVM, dvmClass: DvmClass, dvmMethod: DvmMethod, args: VaList): Boolean {
+        val signature = dvmMethod.signature
+        when (signature) {
+            "com/tencent/mobileqq/dt/app/Dtc->checkAppInstalled(Ljava/lang/String;)Z" -> {
+                val packageName = args.getObjectArg<StringObject>(0)?.value ?: ""
+                 println("checking if app installed: $packageName")
+                when(packageName) {
+                    "com.kugou.android" -> return true
+                    "com.tencent.mm" -> return true
+                    "com.tencent.map" -> return false
+                    "com.tencent.androidqqmail" -> return true
+                    "com.riotgames.league.wildrift" -> return false
+                    "com.qqgame.hlddz" -> return true
+                    //tmd检测的全是游戏
+                }
+                return false
+            }
 
+            "isRooted()Z" -> return false
+            "isDebug()Z" -> return false
+        }
+
+        return super.callStaticBooleanMethodV(vm, dvmClass, dvmMethod, args)
+    }
     override fun callStaticIntMethodV(vm: BaseVM?, dvmClass: DvmClass?, signature: String?, vaList: VaList?): Int {
         if ("com/tencent/secprotocol/t/s->e(Landroid/content/Context;)I" == signature) {
             return when (envData.version) {
@@ -371,6 +442,10 @@ class QSecJni(
                 else -> error("不支持该TIM版本")
             }
         }
+        if ("android/os/Process->myUid()I" == signature) {
+            return 10001
+        }
+
         return super.callStaticIntMethodV(vm, dvmClass, signature, vaList)
     }
 
@@ -558,4 +633,6 @@ class QSecJni(
     ): DvmObject<*> {
         return super.callObjectMethod(vm, dvmObject, signature, varArg)
     }
+
+
 }

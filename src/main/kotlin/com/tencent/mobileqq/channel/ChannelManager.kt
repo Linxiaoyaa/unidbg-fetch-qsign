@@ -18,7 +18,7 @@ object ChannelManager {
                 )
         }.onFailure {
             vm.newInstance("com/tencent/mobileqq/channel/ChannelManager", unique = true)
-                .callJniMethod(vm.emulator, "initReport(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+                .callJniMethod(vm.emulator, "initReport()V",
                     qua, version, androidOs, brand + model
                 )
         }

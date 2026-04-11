@@ -1,5 +1,6 @@
 package com.tencent.mobileqq.fe
 
+import com.github.unidbg.linux.android.dvm.DvmObject
 import com.tencent.mobileqq.channel.ChannelManager
 import com.tencent.mobileqq.dt.Dtn
 import com.tencent.mobileqq.qsec.qsecurity.DeepSleepDetector
@@ -22,7 +23,7 @@ object FEKit {
         val context = vm.newInstance("android/content/Context", unique = true)
         Dtn.initContext(vm, context)
 
-        Dtn.initLog(vm, vm.newInstance("com/tencent/mobileqq/fe/IFEKitLog"))
+        Dtn.initLog(vm, context,vm.newInstance("com/tencent/mobileqq/fe/IFEKitLog"))
         Dtn.initUin(vm, uin)
 
         QSec.doSomething(vm, context)
@@ -35,6 +36,8 @@ object FEKit {
         vm.global["uin"] = uin
 
         Dtn.initUin(vm, uin)
+        Dtn.initFinally(vm)
         QQSecuritySign.dispatchEvent(vm, "Kicked", uin)
     }
+
 }

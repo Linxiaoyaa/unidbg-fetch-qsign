@@ -6,7 +6,7 @@ import moe.fuqiuluo.utils.BytesUtil
 import kotlin.text.Charsets.UTF_8
 import kotlin.text.toByteArray
 
-inline fun newBuilder() = BytePacketBuilder()
+fun newBuilder() = BytePacketBuilder()
 
 fun BytePacketBuilder.writeBytes(bytes: ByteArray) = this.writeFully(bytes)
 

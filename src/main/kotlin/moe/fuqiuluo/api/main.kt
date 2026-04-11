@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import moe.fuqiuluo.comm.Protocol
+import moe.fuqiuluo.comm.UnidbgConfig
 import project.BuildConfig
 
 @Serializable
@@ -20,14 +21,16 @@ data class APIResult<T>(
 @Serializable
 data class APIInfo(
     val version: String,
-    val protocol: Protocol
+    val protocol: Protocol,
+    val unidbg: UnidbgConfig
 )
 
 fun Routing.index() {
     get("/") {
-        call.respond(APIResult(0, "IAA 云天明 章北海", APIInfo(
+        call.respond(APIResult(0, "林晓雅", APIInfo(
             version = BuildConfig.version,
-            protocol = CONFIG.protocol
+            protocol = CONFIG.protocol,
+            unidbg = CONFIG.unidbg
         )))
     }
 }

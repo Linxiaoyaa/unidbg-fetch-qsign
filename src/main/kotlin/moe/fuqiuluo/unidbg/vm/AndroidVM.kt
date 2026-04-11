@@ -2,6 +2,7 @@ package moe.fuqiuluo.unidbg.vm
 
 import CONFIG
 import com.github.unidbg.arm.backend.DynarmicFactory
+import com.github.unidbg.arm.backend.KvmFactory
 import com.github.unidbg.arm.backend.Unicorn2Factory
 import com.github.unidbg.linux.android.AndroidEmulatorBuilder
 import com.github.unidbg.linux.android.LogCatLevel
@@ -13,14 +14,14 @@ import org.apache.commons.logging.LogFactory
 import java.io.Closeable
 import java.io.File
 
-open class AndroidVM(packageName: String, dynarmic: Boolean, unicorn: Boolean): Closeable {
+open class AndroidVM(packageName: String, dynarmic: Boolean, unicorn: Boolean,Kvm : Boolean): Closeable {
     internal val emulator = AndroidEmulatorBuilder
         .for64Bit()
         .setProcessName(packageName)
         .apply {
             if (dynarmic) addBackendFactory(DynarmicFactory(true))
             if (unicorn) addBackendFactory(Unicorn2Factory(true))
-            //if (unicorn) addBackendFactory(KvmFactory(true))
+            if (Kvm) addBackendFactory(KvmFactory(true))
         }
         .build()!!
     protected val memory = emulator.memory!!

@@ -5,18 +5,20 @@ val ktor_version: String by project
 val logback_version: String by project
 
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.9.24"
     application
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.22"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "moe.fuqiuluo"
 version = "1.1.9"
 
 repositories {
+
+    maven("https://maven.aliyun.com/repository/public")
+    maven("https://maven.aliyun.com/repository/google")
     mavenCentral()
-    maven("https://kotlin.bintray.com/ktor")
 }
 
 dependencies {
@@ -41,7 +43,7 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(21)
 }
 
 application {
@@ -77,4 +79,16 @@ tasks {
     named("processResources") {
         dependsOn("generateProjectFile")
     }
+}
+
+tasks.withType<JavaExec> {
+    jvmArgs(
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-opens=java.base/sun.security.x509=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-exports=java.base/sun.security.x509=ALL-UNNAMED",
+        "-Djdk.attach.allowAttachSelf=true"
+    )
 }

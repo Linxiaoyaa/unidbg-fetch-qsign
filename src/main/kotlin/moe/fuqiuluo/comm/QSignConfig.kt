@@ -41,6 +41,7 @@ data class UnidbgConfig(
     var dynarmic: Boolean,
     var unicorn: Boolean,
     var debug: Boolean,
+    var kvm: Boolean,
 )
 
 @Serializable
