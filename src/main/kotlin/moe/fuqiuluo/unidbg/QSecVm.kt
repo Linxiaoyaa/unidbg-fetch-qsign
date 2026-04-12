@@ -14,8 +14,6 @@ import moe.fuqiuluo.unidbg.env.QSecJni
 import moe.fuqiuluo.unidbg.vm.AndroidVM
 import moe.fuqiuluo.unidbg.vm.GlobalData
 import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
 import javax.security.auth.Destroyable
 import kotlin.system.exitProcess
 
@@ -46,13 +44,13 @@ class QSecVM(
                                     if(arg1>0x100000000 || arg2>0x100000000){
                                         return HookStatus.LR(emulator, -1)
                                     }
-                                } catch (ignored: Exception) {
+                                } catch (_: Exception) {
                                 }
                                 return HookStatus.RET(emulator, p3)
                             }
                         }).peer
                     }
-                    return 0;
+                    return 0
                 }
             })
 
@@ -133,14 +131,6 @@ class QSecVM(
             global[name] = obj
         }
         vm.setVerbose(true)
-        val module = vm.emulator.memory.findModule("libfekit.so")
-
-//// 1. 定义输出文件（绝对不要直接打印到控制台，IDE会卡死）
-//        val traceStream = PrintStream(FileOutputStream("fekit_trace.log"))
-//
-//// 2. 开启追踪（建议只追踪 libfekit.so 的内存范围）
-//        val tracer = vm.emulator.traceCode(module.base, module.base + module.size)
-//        tracer.setRedirect(traceStream)
         return obj
     }
 

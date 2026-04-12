@@ -3,10 +3,8 @@
 package moe.fuqiuluo.unidbg.env
 
 import CONFIG
-import com.github.unidbg.Symbol
 import com.github.unidbg.linux.android.dvm.*
 import com.github.unidbg.linux.android.dvm.array.ArrayObject
-import com.github.unidbg.utils.Inspector
 import com.tencent.mobileqq.channel.SsoPacket
 import com.tencent.mobileqq.dt.model.FEBound
 import com.tencent.mobileqq.qsec.qsecest.SelfBase64
@@ -18,15 +16,12 @@ import moe.fuqiuluo.ext.toHexString
 import moe.fuqiuluo.unidbg.QSecVM
 import moe.fuqiuluo.unidbg.vm.GlobalData
 import moe.fuqiuluo.utils.MD5
-import org.apache.commons.codec.digest.DigestUtils
-import org.slf4j.LoggerFactory
 import java.io.File
-import java.security.SecureRandom
 import java.util.*
 import kotlin.random.Random
 import kotlin.random.nextInt
 
-private val logger = LoggerFactory.getLogger(QSecJni::class.java)
+//private val logger = LoggerFactory.getLogger(QSecJni::class.java)
 
 typealias BytesObject = com.github.unidbg.linux.android.dvm.array.ByteArray
 
@@ -355,12 +350,10 @@ class QSecJni(
                 82 -> "90721e0b3aaa7f77503b6abedd960c2e".uppercase()
                 83 -> "0"
                 86 -> fun(): String {
-                    val data = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray()
-                    val secureRandom = SecureRandom()
                     val sb = StringBuilder(32)
-                    for (i2 in 0 until 32) {
-                        sb.append(data[secureRandom.nextInt(data.size)])
-                    }
+//                    for (i2 in 0 until 32) {
+//                        sb.append(data[secureRandom.nextInt(data.size)])
+//                    }
                     return sb.toString()
                 }()
                 87 -> "0" // busy box
@@ -407,6 +400,11 @@ class QSecJni(
             } else {
                 StringObject(vm, "")
             }
+        }
+        if ("com/tencent/mobileqq/dt/app/Dtc->getUid(Ljava/lang/String;)Ljava/lang/String;" == signature){
+            val key = vaList.getObjectArg<StringObject>(0)?.value ?: ""
+            println("getUid: $key")
+            return StringObject(vm, "10001")
         }
         return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList)
     }
@@ -463,6 +461,13 @@ class QSecJni(
             return
         }
         if (signature == "com/tencent/mobileqq/dt/app/Dtc->saveList(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V") {
+            return
+        }
+        if (signature == "com/tencent/mobileqq/dt/app/Dtc->mmKVQsecSaveValue(Ljava/lang/String;Ljava/lang/String;)V") {
+            val key = vaList.getObjectArg<StringObject>(0).value
+            val value = vaList.getObjectArg<StringObject>(1).value
+            global[key] = value
+            println("mmKVQsec Value: $key to $value")
             return
         }
         super.callStaticVoidMethodV(vm, dvmClass, signature, vaList)
