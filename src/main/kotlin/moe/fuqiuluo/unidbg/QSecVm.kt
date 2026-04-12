@@ -2,6 +2,7 @@ package moe.fuqiuluo.unidbg
 
 import com.github.unidbg.Emulator
 import com.github.unidbg.arm.Arm64Hook
+import com.github.unidbg.arm.ArmHook
 import com.github.unidbg.arm.HookStatus
 import com.github.unidbg.arm.context.RegisterContext
 import com.github.unidbg.hook.HookListener
@@ -22,12 +23,13 @@ class QSecVM(
     val envData: EnvData,
     dynamic: Boolean,
     unicorn: Boolean,
-    kvm: Boolean
-): Destroyable, AndroidVM(envData.packageName, dynamic, unicorn,kvm) {
+    kvm: Boolean,
+    is64Bit: Boolean
+): Destroyable, AndroidVM(envData.packageName, dynamic, unicorn,kvm,is64Bit) {
     private var destroy: Boolean = false
     private var isInit: Boolean = false
     internal val global = GlobalData()
-
+    
     init {
         runCatching {
             val resolver = FileResolver(23, this@QSecVM)
@@ -35,22 +37,34 @@ class QSecVM(
             memory.addHookListener(object : HookListener {
                 override fun hook(svcMemory: SvcMemory, p1: String?, p2: String?, p3: Long): Long {
                     if(p2 == "memcmp"){
-                        return svcMemory.registerSvc(object : Arm64Hook() {
-                            override fun hook(emulator: Emulator<*>): HookStatus {
-                                val context = emulator.getContext<RegisterContext>()
-                                try {
+                        val hookObj = if (emulator.is64Bit)
+                        {
+                            object : Arm64Hook() {
+                                override fun hook(emulator: Emulator<*>): HookStatus {
+                                    val context = emulator.getContext<RegisterContext>()
                                     val arg1 = context.getLongArg(0)
                                     val arg2 = context.getLongArg(1)
-                                    if(arg1>0x100000000 || arg2>0x100000000){
-                                        return HookStatus.LR(emulator, -1)
+                                    return if (arg1 > 0x100000000L || arg2 > 0x100000000L) {
+                                        HookStatus.LR(emulator, -1)
+                                    } else {
+                                        HookStatus.RET(emulator, p3)
                                     }
-                                } catch (_: Exception) {
                                 }
-                                return HookStatus.RET(emulator, p3)
                             }
-                        }).peer
+                        } else {
+                            object : ArmHook() {
+                                override fun hook(emulator: Emulator<*>): HookStatus {
+                                    return HookStatus.RET(emulator, p3)
+                                }
+                            }
+                        }
+                        return svcMemory.registerSvc(hookObj).peer
                     }
+                    
+                    
                     return 0
+                    
+                    
                 }
             })
 
@@ -58,44 +72,7 @@ class QSecVM(
             vm.setJni(QSecJni(envData, this, global))
 
             if (envData.packageName == "com.tencent.mobileqq") {
-                println("QSign-Unidbg 白名单模式")
-                arrayOf(
-                    "android/os/Build\$VERSION",
-                    "android/content/pm/ApplicationInfo",
-                    "com/tencent/mobileqq/fe/IFEKitLog",
-                    "com/tencent/mobileqq/channel/ChannelProxy",
-                    "com/tencent/mobileqq/qsec/qsecurity/QSec",
-                    "com/tencent/mobileqq/qsec/qsecurity/QSecConfig",
-                    "com/tencent/mobileqq/sign/QQSecuritySign\$SignResult",
-                    "java/lang/String",
-                    "com/tencent/mobileqq/qsec/qsecest/QsecEst",
-                    "com/tencent/qqprotect/qsec/QSecFramework",
-                    "com/tencent/mobileqq/dt/app/Dtc",
-                    "android/provider/Settings\$System",
-                    "com/tencent/mobileqq/fe/utils/DeepSleepDetector",
-                    "com/tencent/mobileqq/dt/model/FEBound",
-                    "java/lang/ClassLoader",
-                    "java/lang/Thread",
-                    "android/content/Context",
-                    "android/content/ContentResolver",
-                    "java/io/File",
-                    "java/lang/Integer",
-                    "java/lang/Object",
-                    "java/util/ArrayList",
-                    "android/os/Process",
-                    "com/tencent/mobileqq/sign/QQSecuritySign",
-                    "com/tencent/mobileqq/channel/ChannelManager",
-                    "com/tencent/mobileqq/dt/Dtn",
-                    "com/tencent/mobileqq/qsec/qsecdandelionsdk/Dandelion",
-                    "com/tencent/mobileqq/qsec/qsecprotocol/ByteData",
-                    "com/tencent/mobileqq/qsec/qseccodec/SecCipher",
-                    "dalvik/system/BaseDexClassLoader",
-                    "android/content/pm/IPackageManager\$Stub",
-                    "android/os/ServiceManager",
-                    "android/os/IBinder"
-                ).forEach {
-                    vm.addFilterFoundClass(it)
-                }
+                println("Running for Mobile QQ VM")
             } else {
                 vm.addNotFoundClass("com/tencent/mobileqq/dt/Dc")
                 vm.addNotFoundClass("com/tencent/mobileqq/dt/Dte")

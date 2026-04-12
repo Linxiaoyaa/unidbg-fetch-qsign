@@ -42,6 +42,7 @@ data class UnidbgConfig(
     var unicorn: Boolean,
     var debug: Boolean,
     var kvm: Boolean,
+    var is64Bit: Boolean,
 )
 
 @Serializable

@@ -10,7 +10,7 @@ import moe.fuqiuluo.unidbg.QSecVM
 
 class Session(envData: EnvData) {
     internal val vm: QSecVM =
-        QSecVM(BASE_PATH, envData, CONFIG.unidbg.dynarmic, CONFIG.unidbg.unicorn,CONFIG.unidbg.kvm)
+        QSecVM(BASE_PATH, envData, CONFIG.unidbg.dynarmic, CONFIG.unidbg.unicorn,CONFIG.unidbg.kvm,CONFIG.unidbg.is64Bit)
     internal val mutex = Mutex()
 
     init {

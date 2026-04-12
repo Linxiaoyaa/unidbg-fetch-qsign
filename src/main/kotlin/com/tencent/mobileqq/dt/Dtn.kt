@@ -14,7 +14,14 @@ object Dtn {
                 context,
                 ""
             )
-        } else {
+        } else if(vm.envData.packageName == "com.tencent.qqlite"){
+            dtnInstance.callJniMethod(
+                vm.emulator,
+                "initContext(Landroid/content/Context;Ljava/lang/String;)V",
+                context,
+                ""
+            )
+        }else {
             dtnInstance.callJniMethod(
                 vm.emulator,
                 "initNativeContext(Landroid/content/Context;Ljava/lang/String;)V",
@@ -25,7 +32,7 @@ object Dtn {
     }
 
     fun initLog(vm: QSecVM,context: DvmObject<*>, logger: DvmObject<*>) {
-        if(vm.envData.packageName != "com.tencent.tim") {
+        if(vm.envData.packageName == "com.tencent.mobileqq") {
             vm.newInstance("com/tencent/mobileqq/dt/Dtn", unique = true)
                 .callJniMethod(
                     vm.emulator,
@@ -33,7 +40,7 @@ object Dtn {
                     context,
                     logger
                 )
-        }else{
+        }else {
             vm.newInstance("com/tencent/mobileqq/dt/Dtn", unique = true)
                 .callJniMethod(
                     vm.emulator,

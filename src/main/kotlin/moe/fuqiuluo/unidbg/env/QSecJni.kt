@@ -588,7 +588,7 @@ class QSecJni(
     }
 
     override fun toReflectedMethod(vm: BaseVM?, dvmClass: DvmClass?, signature: String?): DvmObject<*> {
-        //println("toReflectedMethod")
+        println("toReflectedMethod: $signature")
         return super.toReflectedMethod(vm, dvmClass, signature)
     }
 
