@@ -31,6 +31,7 @@ class QSecJni(
     val global: GlobalData
 ) : AbstractJni() {
 
+
     override fun getStaticIntField(vm: BaseVM, dvmClass: DvmClass, signature: String): Int {
         if (signature == "android/os/Build\$VERSION->SDK_INT:I") {
             return 26
@@ -86,6 +87,13 @@ class QSecJni(
             //val data = vaList.getObjectArg<ByteArray>(1)?.getValues() ?: byteArrayOf()
             val seq = vaList.getLongArg(2)
             println("ChannelProxy: Sending message. Cmd: $cmd, Seq: $seq")
+            return
+        }
+        if("com/tencent/mobileqq/fe/IFEKitLog->d(Ljava/lang/String;ILjava/lang/String;)V" == signature) {
+            val tag = vaList.getObjectArg<StringObject>(0)?.value ?: ""
+            val level = vaList.getIntArg(1)
+            val msg = vaList.getObjectArg<StringObject>(2)?.value ?: ""
+            println("IFEKitLog.d [Level:$level] $tag -> $msg")
             return
         }
         super.callVoidMethodV(vm, dvmObject, signature, vaList)
@@ -245,6 +253,8 @@ class QSecJni(
                     "ro.product.model" -> ("Pixel 4")
                     "ro.recovery_id" -> ""
                     "gsm.version.baseband" -> ("g9611-00001-200508-B-6477528")
+                    "ro.soc.model" -> "SM8650"
+                    "ro.soc.id" ->"506"
                     else -> error("Not support prop:$key")
                 }
             )
@@ -343,7 +353,7 @@ class QSecJni(
                 74 -> "200" // screen_brightness
                 75 -> Random.nextInt(0 .. 500000).toString()
                 76 -> "1,20,50"
-                77 -> (1024 * 1024 * 1024 * 32).toString()
+                77 -> (107407736832).toString()
                 78 -> "0" // su Bin
                 79 -> "1.1.2"
                 81 -> "zh"
@@ -405,6 +415,32 @@ class QSecJni(
             val key = vaList.getObjectArg<StringObject>(0)?.value ?: ""
             println("getUid: $key")
             return StringObject(vm, "10001")
+        }
+        if("com/tencent/mobileqq/dt/app/Dtc->getNetworkInterfaceNames()Ljava/lang/String;" == signature){
+            return StringObject(vm, "wlan0")
+        }
+        if("com/tencent/mobileqq/dt/app/Dtc->getBluetoothInfo()Ljava/lang/String;" == signature) {
+            return StringObject(vm, "Bluetooth Status\n" +
+                    "  enabled: false\n" +
+                    "  state: OFF\n" +
+                    "  address: null\n" +
+                    "  name: Xiaomi 23116PN5BC\n" +
+                    "  time since enabled: 00:02:18.927\n" +
+                    "\n" +
+                    "Enable log:\n" +
+                    "  05-12 00:45:14  Enabled  due to SYSTEM_BOOT by android\n" +
+                    "\n" +
+                    "Bluetooth crashed 0 times\n" +
+                    "\n" +
+                    "0 BLE apps registered\n" +
+                    "\n" +
+                    "BluetoothManagerService:\n" +
+                    "  mEnable:true\n" +
+                    "  mQuietEnable:false\n" +
+                    "  mEnableExternal:true\n" +
+                    "  mQuietEnableExternal:false\n" +
+                    "\n" +
+                    "Bluetooth Service not connected")
         }
         return super.callStaticObjectMethodV(vm, dvmClass, signature, vaList)
     }
@@ -607,6 +643,7 @@ class QSecJni(
                 .resolveClass("android/content/Intent")
                 .newObject(hashMapOf("action" to (vaList.getObjectArg(0) as StringObject).value))
         }
+
         return super.newObjectV(vm, dvmClass, signature, vaList)
     }
 

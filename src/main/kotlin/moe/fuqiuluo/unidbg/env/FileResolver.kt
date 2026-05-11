@@ -9,14 +9,12 @@ import com.github.unidbg.linux.file.ByteArrayFileIO
 import com.github.unidbg.linux.file.DirectoryFileIO
 import com.github.unidbg.linux.file.SimpleFileIO
 import com.github.unidbg.unix.UnixEmulator
-import io.ktor.server.config.*
 import moe.fuqiuluo.ext.hex2ByteArray
 import moe.fuqiuluo.unidbg.QSecVM
 import moe.fuqiuluo.unidbg.env.files.fetchCpuInfo
 import moe.fuqiuluo.unidbg.env.files.fetchMemInfo
 import moe.fuqiuluo.unidbg.env.files.fetchStat
 import moe.fuqiuluo.unidbg.env.files.fetchStatus
-import java.io.File
 import java.util.UUID
 import java.util.logging.Logger
 
@@ -195,6 +193,13 @@ class FileResolver(
         }
 
         if (path == "/data/app/~~vbcRLwPxS0GyVfqT-nCYrQ==/${vm.envData.packageName}-xJKJPVp9lorkCgR_w5zhyA==/lib/arm64/libwtecdh.so") {
+            tmpFilePath.resolve("libwtecdh.so").let {
+                if (it.exists()) {
+                    return FileResult.success(SimpleFileIO(oflags, it, path))
+                }
+            }
+        }
+        if (path == "/data/app/~~vbcRLwPxS0GyVfqT-nCYrQ==/${vm.envData.packageName}-xJKJPVp9lorkCgR_w5zhyA==/lib/x86/libwtecdh.so") {
             tmpFilePath.resolve("libwtecdh.so").let {
                 if (it.exists()) {
                     return FileResult.success(SimpleFileIO(oflags, it, path))

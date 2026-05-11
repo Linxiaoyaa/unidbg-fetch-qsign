@@ -18,7 +18,9 @@ class Session(envData: EnvData) {
         vm.global["mutex"] = Mutex(true)
         vm.global["qimei36"] = envData.qimei36.lowercase()
         vm.global["guid"] = envData.guid.lowercase()
+
         vm.init()
+
         FEKit.init(vm, envData.uin.toString())
     }
 }

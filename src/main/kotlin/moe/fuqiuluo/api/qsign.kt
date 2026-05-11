@@ -15,7 +15,6 @@ import kotlinx.serialization.Serializable
 import moe.fuqiuluo.comm.EnvData
 import moe.fuqiuluo.ext.*
 import moe.fuqiuluo.unidbg.session.SessionManager
-import java.util.Locale
 import java.util.Locale.getDefault
 
 fun Routing.sign() {
@@ -34,16 +33,15 @@ fun Routing.sign() {
     }
 
     post("/sign") {
-        val param = call.receiveParameters()
-        val uin = fetchPost(param, "uin")!!
-        val qua = fetchPost(param, "qua", CONFIG.protocol.qua)!!
-        val cmd = fetchPost(param, "cmd")!!
-        val seq = fetchPost(param, "seq")!!.toInt()
-        val buffer = fetchPost(param, "buffer")!!.hex2ByteArray()
-        val qimei36 = fetchPost(param, "qimei36", def = "")!!
-
-        val androidId = param["android_id"] ?: ""
-        val guid = param["guid"] ?: ""
+        val req = call.receive<SignRequest>()
+        val uin = req.uin
+        val qua = req.qua ?: CONFIG.protocol.qua
+        val cmd = req.cmd
+        val seq = req.seq.toInt()
+        val buffer = req.buffer.hex2ByteArray()
+        val qimei36 = req.qimei36 ?: ""
+        val androidId = req.android_id ?: ""
+        val guid = req.guid ?: ""
 
         requestSign(cmd, uin, qua, seq, buffer, qimei36, androidId, guid)
     }
@@ -69,9 +67,10 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.requestSign(
     guid: String
 ) {
     val session = initSession(uin.toLong()) ?: run {
-        if (androidId.isNullOrEmpty() || guid.isNullOrEmpty()) {
+        if (guid.isEmpty()) {
             throw MissingKeyError
         }
+
         SessionManager.register(
             EnvData(
                 uin.toLong(),
@@ -113,3 +112,15 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.requestSign(
         )
     )
 }
+
+@Serializable
+data class SignRequest(
+    val cmd: String,
+    val buffer: String,
+    val uin: String,
+    val seq: String, // JSON 里是字符串 "12741"，所以这里用 String，等下再转 Int
+    val qua: String? = null,
+    val qimei36: String? = null,
+    val android_id: String? = null,
+    val guid: String? = null
+)

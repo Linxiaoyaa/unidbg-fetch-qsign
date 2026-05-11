@@ -8,10 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import moe.fuqiuluo.ext.fetchGet
-import kotlin.concurrent.timer
+import kotlin.time.Duration.Companion.milliseconds
 
 fun Routing.requestToken() {
     get("/request_token") {
@@ -30,7 +29,7 @@ fun Routing.requestToken() {
                 lock.tryLock()
                 QQSecuritySign.requestToken(vm)
 
-                withTimeoutOrNull(5000) {
+                withTimeoutOrNull(5000.milliseconds) {
                     lock.withLock {
                         val requiredPacket = vm.global["PACKET"] as ArrayList<SsoPacket>
                         list.addAll(requiredPacket)

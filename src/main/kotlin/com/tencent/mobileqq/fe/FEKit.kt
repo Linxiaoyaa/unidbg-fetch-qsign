@@ -1,6 +1,5 @@
 package com.tencent.mobileqq.fe
 
-import com.github.unidbg.linux.android.dvm.DvmObject
 import com.tencent.mobileqq.channel.ChannelManager
 import com.tencent.mobileqq.dt.Dtn
 import com.tencent.mobileqq.qsec.qsecurity.DeepSleepDetector
@@ -20,6 +19,7 @@ object FEKit {
         QQSecuritySign.initSafeMode(vm, false)
         QQSecuritySign.dispatchEvent(vm, "Kicked", uin)
 
+
         val context = vm.newInstance("android/content/Context", unique = true)
         Dtn.initContext(vm, context)
 
@@ -32,12 +32,5 @@ object FEKit {
         ChannelManager.initReport(vm, vm.envData.qua, "6.100.248") // TODO(maybe check?)
     }
 
-    fun changeUin(vm: QSecVM, uin: String) {
-        vm.global["uin"] = uin
-
-        Dtn.initUin(vm, uin)
-        Dtn.initFinally(vm)
-        QQSecuritySign.dispatchEvent(vm, "Kicked", uin)
-    }
 
 }

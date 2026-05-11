@@ -22,6 +22,7 @@ private val API_LIST = arrayOf(
     Routing::index,
     Routing::sign,
     Routing::energy,
+    Routing::xwid,
     Routing::submit,
     Routing::requestToken,
     Routing::register

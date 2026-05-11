@@ -36,6 +36,7 @@ open class AndroidVM(packageName: String, dynarmic: Boolean, unicorn: Boolean, k
         if (CONFIG.unidbg.debug) {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug")
         }
+
         vm.setVerbose(CONFIG.unidbg.debug)
         val syscall = emulator.syscallHandler
         syscall.isVerbose = CONFIG.unidbg.debug

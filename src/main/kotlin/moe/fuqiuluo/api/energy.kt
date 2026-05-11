@@ -3,6 +3,7 @@ package moe.fuqiuluo.api
 import CONFIG
 import com.tencent.crypt.Crypt
 import com.tencent.mobileqq.qsec.qsecdandelionsdk.Dandelion
+import com.tencent.mobileqq.qsec.qsecurity.QSec
 import com.tencent.secprotocol.ByteData
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -36,7 +37,7 @@ fun Routing.energy() {
         val sign = session.withLock {
             Dandelion.energy(session.vm, data, salt)
         }
-        call.respond(APIResult(0, "success", sign.toHexString()))
+        call.respond(APIResult(0, "success", sign.toHexString().uppercase()))
     }
 
     get("/get_byte") {
@@ -223,5 +224,26 @@ fun Routing.energy() {
         }
 
         call.respond(APIResult(0, "success", sign.toHexString()))
+    }
+
+}
+
+fun Routing.xwid(){
+
+    get("/getXwDebugId") {
+        val uin = fetchGet("uin")!!.toLong()
+        val session = initSession(uin) ?: run {
+            val androidId = fetchGet("android_id", def = "")
+            val guid = fetchGet("guid", def = "")
+            if (androidId.isNullOrEmpty() || guid.isNullOrEmpty()) {
+                throw MissingKeyError
+            }
+            SessionManager.register(EnvData(uin, androidId, guid.lowercase(), "", CONFIG.protocol.qua, CONFIG.protocol.version, CONFIG.protocol.code))
+            findSession(uin)
+        }
+        val sign = session.withLock {
+            QSec.getXwDebugID(session.vm,uin.toString())
+        }
+        call.respond(APIResult(0,"success", sign.value.toHexString().uppercase()))
     }
 }

@@ -9,7 +9,12 @@ object QSec {
         vm.newInstance("com/tencent/mobileqq/qsec/qsecurity/QSec", unique = true)
             .callJniMethodInt(vm.emulator, "doSomething(Landroid/content/Context;I)I", context, 1)
     }
+    fun getXwDebugID(vm:QSecVM, uin:String) : ByteArray {
+        return vm.newInstance("com/tencent/mobileqq/qsec/qsecurity/QSec", unique = true)
+            .callJniMethodObject(vm.emulator, "getXwDebugID(Ljava/lang/String;)[B",
+                uin) as ByteArray
 
+    }
     fun getEst(vm: QSecVM): ByteArray? {
         val context = vm.newInstance("android/content/Context", unique = true)
         return vm.newInstance("com/tencent/mobileqq/qsec/qsecest/QsecEst", unique = true)

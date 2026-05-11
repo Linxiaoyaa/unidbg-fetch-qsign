@@ -25,20 +25,19 @@ class QSecVM(
     unicorn: Boolean,
     kvm: Boolean,
     is64Bit: Boolean
-): Destroyable, AndroidVM(envData.packageName, dynamic, unicorn,kvm,is64Bit) {
+) : Destroyable, AndroidVM(envData.packageName, dynamic, unicorn, kvm, is64Bit) {
     private var destroy: Boolean = false
     private var isInit: Boolean = false
     internal val global = GlobalData()
-    
+
     init {
         runCatching {
             val resolver = FileResolver(23, this@QSecVM)
             memory.setLibraryResolver(resolver)
             memory.addHookListener(object : HookListener {
                 override fun hook(svcMemory: SvcMemory, p1: String?, p2: String?, p3: Long): Long {
-                    if(p2 == "memcmp"){
-                        val hookObj = if (emulator.is64Bit)
-                        {
+                    if (p2 == "memcmp") {
+                        val hookObj = if (emulator.is64Bit) {
                             object : Arm64Hook() {
                                 override fun hook(emulator: Emulator<*>): HookStatus {
                                     val context = emulator.getContext<RegisterContext>()
@@ -60,11 +59,7 @@ class QSecVM(
                         }
                         return svcMemory.registerSvc(hookObj).peer
                     }
-                    
-                    
                     return 0
-                    
-                    
                 }
             })
 
@@ -92,6 +87,8 @@ class QSecVM(
             }
             loadLibrary(coreLibPath.resolve("libfekit.so"))
             global["DeepSleepDetector"] = DeepSleepDetector()
+
+
             this.isInit = true
         }.onFailure {
             it.printStackTrace()
